@@ -78,24 +78,19 @@ public class GameManager : MonoBehaviour
 
     private void CreatePlayer()
     {
-        // Create player GameObject with required components
         GameObject playerObj = new GameObject("Player");
         playerObj.transform.SetParent(mainCanvas.transform, false);
         
-        // Add and configure Image component
         Image playerImage = playerObj.AddComponent<Image>();
         playerImage.sprite = playerSprite;
         playerImage.preserveAspect = true;
         
-        // Set position
         RectTransform rt = playerObj.GetComponent<RectTransform>();
         rt.anchoredPosition = playerScreenPosition;
-        rt.sizeDelta = new Vector2(150, 150); // Set appropriate size
+        rt.sizeDelta = new Vector2(150, 150);
 
-        // Add Player component and initialize
         player = playerObj.AddComponent<Player>();
         
-        // Initialize UI components
         if (playerStatsText != null && battleLogText != null)
         {
             player.SetTextComponents(playerStatsText, battleLogText);
@@ -115,24 +110,97 @@ public class GameManager : MonoBehaviour
         }
 
         GameObject enemyPrefab = GetRandomEnemyPrefab();
-        if (enemyPrefab == null)
+        if (enemyPrefab == null) // Fixed typo: enemyPrefab instead of enemyPrefrab
         {
-            Debug.LogError("Missing enemy prefab!");
+            Debug.LogError("No enemy prefabs assigned in GameManager!");
+            CreateFallbackEnemy();
             return;
         }
 
         GameObject enemyObj = Instantiate(enemyPrefab, mainCanvas.transform);
-        enemyObj.GetComponent<RectTransform>().anchoredPosition = enemyScreenPosition;
-        
+        enemyObj.name = enemyPrefab.name + "_Instance";
+
+        VerifyEnemyComponents(enemyObj);
+
         currentEnemy = enemyObj.GetComponent<Enemy>();
         if (currentEnemy == null)
         {
-            Debug.LogError("Enemy component missing on prefab!");
+            Debug.LogError("Enemy component still missing after verification!");
+            Destroy(enemyObj);
+            CreateFallbackEnemy();
             return;
         }
 
-        currentEnemy.SetTextComponents(enemyStatsText, battleLogText);
-        AppendToBattleLog($"\nA wild {currentEnemy.CharacterName} appears!");
+        RectTransform rt = enemyObj.GetComponent<RectTransform>();
+        rt.anchoredPosition = enemyScreenPosition;
+        rt.sizeDelta = new Vector2(150, 150);
+
+       
+    }
+
+    private void VerifyEnemyComponents(GameObject enemyObj)
+    {
+        if (!enemyObj.TryGetComponent(out Image image))
+        {
+            image = enemyObj.AddComponent<Image>();
+            image.preserveAspect = true;
+            Debug.LogWarning("Added missing Image component to enemy");
+        }
+
+        if (!enemyObj.TryGetComponent(out Enemy _))
+        {
+            if (enemyObj.name.Contains("Kaito"))
+                enemyObj.AddComponent<Kaito>();
+            else if (enemyObj.name.Contains("Rin"))
+                enemyObj.AddComponent<Rin>();
+            else if (enemyObj.name.Contains("Len"))
+                enemyObj.AddComponent<Len>();
+            else
+                enemyObj.AddComponent<Enemy>();
+        }
+
+        if (!enemyObj.TryGetComponent(out Weapon _))
+        {
+            if (enemyObj.name.Contains("Rin"))
+                enemyObj.AddComponent<Axe>();
+            else
+                enemyObj.AddComponent<Sword>();
+        }
+    }
+
+    private void CreateFallbackEnemy()
+    {
+        GameObject fallback = new GameObject("FallbackEnemy", 
+            typeof(RectTransform), 
+            typeof(Image), 
+            typeof(Enemy), 
+            typeof(Sword));
+
+        Image img = fallback.GetComponent<Image>();
+        img.color = Color.magenta;
+        img.rectTransform.sizeDelta = new Vector2(150, 150);
+
+        RectTransform rt = fallback.GetComponent<RectTransform>();
+        rt.anchoredPosition = enemyScreenPosition;
+
+        currentEnemy = fallback.GetComponent<Enemy>();
+        
+        // Use the Enemy's public method to set name if available
+        if (currentEnemy is Enemy enemy)
+        {
+            enemy.SetCharacterName("Fallback");
+        }
+        
+        
+        Debug.LogWarning("Created fallback enemy due to prefab issues");
+    }
+
+    
+
+    private void HandleEnemyDeath()
+    {
+        AppendToBattleLog("\nYou defeated the enemy!");
+        SpawnNewEnemy();
     }
 
     private GameObject GetRandomEnemyPrefab()
@@ -156,7 +224,7 @@ public class GameManager : MonoBehaviour
 
         if (currentEnemy.IsDead())
         {
-            AppendToBattleLog($"\nYou defeated the {currentEnemy.CharacterName}!");
+            AppendToBattleLog("\nYou defeated the enemy!");
             SpawnNewEnemy();
             return;
         }

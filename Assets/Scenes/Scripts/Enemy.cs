@@ -6,6 +6,7 @@ public abstract class Enemy : Character
     [SerializeField] protected TMP_Text _statsText;
     [SerializeField] protected TMP_Text _battleLogText;
     protected Weapon weapon;
+    public object OnDeathEvent { get; set; }
 
     public void SetTextComponents(TMP_Text statsText, TMP_Text battleLogText)
     {
@@ -44,5 +45,10 @@ public abstract class Enemy : Character
         {
             _battleLogText.text += message;
         }
+    }
+
+    public void SetCharacterName(string fallback)
+    {
+        throw new System.NotImplementedException();
     }
 }

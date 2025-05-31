@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 2686204071304324976}
   - component: {fileID: 4814395918497487381}
   - component: {fileID: 2159598819238342023}
-  m_Layer: 5
+  m_Layer: 3
   m_Name: Kaito
   m_TagString: Enemy
   m_Icon: {fileID: 0}

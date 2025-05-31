@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 3038726895383420179}
   - component: {fileID: 2929815273937992621}
   - component: {fileID: 8330017288993085554}
-  m_Layer: 5
+  m_Layer: 3
   m_Name: Rin
   m_TagString: Enemy
   m_Icon: {fileID: 0}
